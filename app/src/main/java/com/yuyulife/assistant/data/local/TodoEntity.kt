@@ -10,5 +10,5 @@ data class TodoEntity(
     val title: String,
     val isCompleted: Boolean = false,
     val createdAt: Long,
+    val deadlineAt: Long? = null,
 )
-

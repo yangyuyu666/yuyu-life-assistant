@@ -20,16 +20,21 @@ import androidx.compose.ui.unit.dp
 import com.yuyulife.assistant.domain.model.LedgerCategories
 import com.yuyulife.assistant.domain.model.TransactionType
 import com.yuyulife.assistant.util.parseAmountToCents
+import com.yuyulife.assistant.ui.component.DatePickerButton
+import com.yuyulife.assistant.util.dateWithCurrentTime
+import com.yuyulife.assistant.util.startOfDay
 
 @Composable
 fun AddLedgerEntryDialog(
     onDismiss: () -> Unit,
-    onAdd: (TransactionType, Long, String, String) -> Unit,
+    onAdd: (TransactionType, Long, String, String, Long) -> Unit,
+    initialDate: Long,
 ) {
     var type by remember { mutableStateOf(TransactionType.EXPENSE) }
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(LedgerCategories.forType(type).first()) }
     var note by remember { mutableStateOf("") }
+    var occurredAt by remember(initialDate) { mutableStateOf(startOfDay(initialDate)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     fun selectType(newType: TransactionType) {
@@ -43,7 +48,7 @@ fun AddLedgerEntryDialog(
             errorMessage = "请输入大于 0 的有效金额"
             return
         }
-        onAdd(type, cents, category, note)
+        onAdd(type, cents, category, note, dateWithCurrentTime(occurredAt))
         onDismiss()
     }
 
@@ -76,6 +81,12 @@ fun AddLedgerEntryDialog(
                         errorMessage?.let { Text(it) }
                     },
                     singleLine = true,
+                )
+
+                DatePickerButton(
+                    selectedDate = occurredAt,
+                    onDateSelected = { occurredAt = startOfDay(it) },
+                    labelPrefix = "记账日期：",
                 )
 
                 Text("分类")

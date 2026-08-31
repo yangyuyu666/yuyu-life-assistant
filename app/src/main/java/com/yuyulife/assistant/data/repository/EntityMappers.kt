@@ -11,6 +11,7 @@ internal fun TodoEntity.toDomain() = TodoItem(
     title = title,
     isCompleted = isCompleted,
     createdAt = createdAt,
+    deadlineAt = deadlineAt,
 )
 
 internal fun TodoItem.toEntity() = TodoEntity(
@@ -18,6 +19,7 @@ internal fun TodoItem.toEntity() = TodoEntity(
     title = title,
     isCompleted = isCompleted,
     createdAt = createdAt,
+    deadlineAt = deadlineAt,
 )
 
 internal fun LedgerEntity.toDomain() = LedgerEntry(
@@ -37,4 +39,3 @@ internal fun LedgerEntry.toEntity() = LedgerEntity(
     note = note,
     occurredAt = occurredAt,
 )
-

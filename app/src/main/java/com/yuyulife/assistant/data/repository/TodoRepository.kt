@@ -11,11 +11,12 @@ class TodoRepository(private val dao: TodoDao) {
         entities.map { it.toDomain() }
     }
 
-    suspend fun add(title: String) {
+    suspend fun add(title: String, deadlineAt: Long) {
         dao.insert(
             TodoEntity(
                 title = title.trim(),
                 createdAt = System.currentTimeMillis(),
+                deadlineAt = deadlineAt,
             ),
         )
     }

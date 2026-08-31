@@ -18,6 +18,7 @@ import com.yuyulife.assistant.util.formatCents
 @Composable
 fun LedgerSummaryCard(
     summary: LedgerSummary,
+    periodLabel: String,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -32,7 +33,7 @@ fun LedgerSummaryCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "当前结余",
+                    text = "${periodLabel}结余",
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.labelLarge,
                 )

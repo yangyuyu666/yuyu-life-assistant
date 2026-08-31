@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [TodoEntity::class, LedgerEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -13,4 +13,3 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun ledgerDao(): LedgerDao
 }
-

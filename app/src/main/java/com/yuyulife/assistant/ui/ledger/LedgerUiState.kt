@@ -6,5 +6,6 @@ import com.yuyulife.assistant.domain.model.LedgerSummary
 data class LedgerUiState(
     val entries: List<LedgerEntry> = emptyList(),
     val summary: LedgerSummary = LedgerSummary(),
+    val periodMode: LedgerPeriodMode = LedgerPeriodMode.DAY,
+    val selectedPeriod: Long = System.currentTimeMillis(),
 )
-

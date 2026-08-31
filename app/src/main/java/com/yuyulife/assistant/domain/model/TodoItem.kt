@@ -5,5 +5,5 @@ data class TodoItem(
     val title: String,
     val isCompleted: Boolean,
     val createdAt: Long,
+    val deadlineAt: Long?,
 )
-

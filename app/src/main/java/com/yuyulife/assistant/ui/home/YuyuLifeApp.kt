@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import com.yuyulife.assistant.data.repository.LedgerRepository
 import com.yuyulife.assistant.data.repository.TodoRepository
 import com.yuyulife.assistant.ui.ledger.LedgerRoute
+import com.yuyulife.assistant.ui.cover.AppCoverScreen
 import com.yuyulife.assistant.ui.theme.YuyuLifeTheme
 import com.yuyulife.assistant.ui.todo.TodoRoute
 
@@ -24,7 +25,13 @@ fun YuyuLifeApp(
     ledgerRepository: LedgerRepository,
 ) {
     YuyuLifeTheme {
+        var showCover by rememberSaveable { mutableStateOf(true) }
         var currentSection by rememberSaveable { mutableStateOf(AppSection.TODO) }
+
+        if (showCover) {
+            AppCoverScreen(onEnter = { showCover = false })
+            return@YuyuLifeTheme
+        }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -55,4 +62,3 @@ fun YuyuLifeApp(
         }
     }
 }
-

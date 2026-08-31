@@ -46,7 +46,7 @@ fun TodoRoute(
 @Composable
 fun TodoScreen(
     uiState: TodoUiState,
-    onAdd: (String) -> Unit,
+    onAdd: (String, Long) -> Unit,
     onCompletedChange: (TodoItem, Boolean) -> Unit,
     onDelete: (TodoItem) -> Unit,
     modifier: Modifier = Modifier,

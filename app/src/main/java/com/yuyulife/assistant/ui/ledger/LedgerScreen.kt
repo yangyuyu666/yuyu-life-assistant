@@ -39,6 +39,9 @@ fun LedgerRoute(
         uiState = uiState,
         onAdd = viewModel::addEntry,
         onDelete = viewModel::deleteEntry,
+        onModeSelected = viewModel::selectMode,
+        onPeriodSelected = viewModel::selectPeriod,
+        onMovePeriod = viewModel::movePeriod,
         modifier = modifier,
     )
 }
@@ -46,8 +49,11 @@ fun LedgerRoute(
 @Composable
 fun LedgerScreen(
     uiState: LedgerUiState,
-    onAdd: (TransactionType, Long, String, String) -> Unit,
+    onAdd: (TransactionType, Long, String, String, Long) -> Unit,
     onDelete: (Long) -> Unit,
+    onModeSelected: (LedgerPeriodMode) -> Unit,
+    onPeriodSelected: (Long) -> Unit,
+    onMovePeriod: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -79,12 +85,27 @@ fun LedgerScreen(
             }
         }
 
-        LedgerSummaryCard(summary = uiState.summary)
+        LedgerPeriodSelector(
+            mode = uiState.periodMode,
+            selectedPeriod = uiState.selectedPeriod,
+            onModeSelected = onModeSelected,
+            onPeriodSelected = onPeriodSelected,
+            onMovePeriod = onMovePeriod,
+        )
+
+        LedgerSummaryCard(
+            summary = uiState.summary,
+            periodLabel = if (uiState.periodMode == LedgerPeriodMode.DAY) "当日" else "当月",
+        )
 
         if (uiState.entries.isEmpty()) {
             EmptyState(
-                title = "还没有收支记录",
-                message = "记录第一笔收入或支出，开始了解钱去了哪里。",
+                title = if (uiState.periodMode == LedgerPeriodMode.DAY) {
+                    "这一天还没有收支记录"
+                } else {
+                    "这个月还没有收支记录"
+                },
+                message = "可以切换日期或月份，也可以立即记一笔。",
                 modifier = Modifier.weight(1f),
             )
         } else {
@@ -109,6 +130,7 @@ fun LedgerScreen(
         AddLedgerEntryDialog(
             onDismiss = { showAddDialog = false },
             onAdd = onAdd,
+            initialDate = uiState.selectedPeriod,
         )
     }
 }

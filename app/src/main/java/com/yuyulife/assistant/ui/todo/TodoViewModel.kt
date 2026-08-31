@@ -21,9 +21,9 @@ class TodoViewModel(
             initialValue = TodoUiState(),
         )
 
-    fun addTodo(title: String) {
+    fun addTodo(title: String, deadlineAt: Long) {
         if (title.isBlank()) return
-        viewModelScope.launch { repository.add(title) }
+        viewModelScope.launch { repository.add(title, deadlineAt) }
     }
 
     fun setCompleted(item: TodoItem, completed: Boolean) {
@@ -44,4 +44,3 @@ class TodoViewModel(
             }
     }
 }
-

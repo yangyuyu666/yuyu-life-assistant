@@ -17,6 +17,7 @@ class LedgerRepository(private val dao: LedgerDao) {
         amountCents: Long,
         category: String,
         note: String,
+        occurredAt: Long,
     ) {
         dao.insert(
             LedgerEntity(
@@ -24,7 +25,7 @@ class LedgerRepository(private val dao: LedgerDao) {
                 amountCents = amountCents,
                 category = category,
                 note = note.trim(),
-                occurredAt = System.currentTimeMillis(),
+                occurredAt = occurredAt,
             ),
         )
     }
