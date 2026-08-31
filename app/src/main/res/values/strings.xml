@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Yuyu Life Assistant</string>
+    <string name="todo_reminder_title">待办即将截止</string>
+    <string name="todo_reminder_default_title">有一项待办需要处理</string>
+    <string name="todo_reminder_channel_name">待办截止提醒</string>
+    <string name="todo_reminder_channel_description">在待办截止前发送提醒</string>
 </resources>
-

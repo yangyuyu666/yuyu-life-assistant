@@ -16,7 +16,10 @@ interface TodoDao {
     fun observeAll(): Flow<List<TodoEntity>>
 
     @Insert
-    suspend fun insert(item: TodoEntity)
+    suspend fun insert(item: TodoEntity): Long
+
+    @Query("SELECT * FROM todos WHERE isCompleted = 0 AND deadlineAt IS NOT NULL")
+    suspend fun getPendingWithDeadline(): List<TodoEntity>
 
     @Update
     suspend fun update(item: TodoEntity)

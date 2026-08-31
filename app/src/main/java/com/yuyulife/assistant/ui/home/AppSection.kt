@@ -6,5 +6,5 @@ enum class AppSection(
 ) {
     TODO(label = "待办", symbol = "✓"),
     LEDGER(label = "记账", symbol = "¥"),
+    SETTINGS(label = "设置", symbol = "⚙"),
 }
-

@@ -15,6 +15,16 @@ fun formatDate(timestamp: Long): String = SimpleDateFormat(
     Locale.CHINA,
 ).format(Date(timestamp))
 
+fun formatDateTime(timestamp: Long): String = SimpleDateFormat(
+    "yyyy年M月d日 HH:mm",
+    Locale.CHINA,
+).format(Date(timestamp))
+
+fun formatTime(timestamp: Long): String = SimpleDateFormat(
+    "HH:mm",
+    Locale.CHINA,
+).format(Date(timestamp))
+
 fun formatMonth(timestamp: Long): String = SimpleDateFormat(
     "yyyy年M月",
     Locale.CHINA,
@@ -48,17 +58,28 @@ fun endOfSelectedDayExclusive(timestamp: Long): Long = shiftDays(timestamp, 1)
 fun endOfSelectedMonthExclusive(timestamp: Long): Long = shiftMonths(timestamp, 1)
 
 fun dateWithCurrentTime(selectedDate: Long, now: Long = System.currentTimeMillis()): Long {
+    return dateWithTime(selectedDate, now)
+}
+
+fun dateWithTime(selectedDate: Long, selectedTime: Long): Long {
     val date = calendarAt(selectedDate)
-    val current = calendarAt(now)
-    date.set(Calendar.HOUR_OF_DAY, current.get(Calendar.HOUR_OF_DAY))
-    date.set(Calendar.MINUTE, current.get(Calendar.MINUTE))
-    date.set(Calendar.SECOND, current.get(Calendar.SECOND))
-    date.set(Calendar.MILLISECOND, current.get(Calendar.MILLISECOND))
+    val time = calendarAt(selectedTime)
+    date.set(Calendar.HOUR_OF_DAY, time.get(Calendar.HOUR_OF_DAY))
+    date.set(Calendar.MINUTE, time.get(Calendar.MINUTE))
+    date.set(Calendar.SECOND, 0)
+    date.set(Calendar.MILLISECOND, 0)
     return date.timeInMillis
 }
 
+fun nextWholeHour(now: Long = System.currentTimeMillis()): Long = calendarAt(now).apply {
+    add(Calendar.HOUR_OF_DAY, 1)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+    set(Calendar.MILLISECOND, 0)
+}.timeInMillis
+
 fun isDeadlineOverdue(deadlineAt: Long, now: Long = System.currentTimeMillis()): Boolean =
-    startOfDay(deadlineAt) < startOfDay(now)
+    deadlineAt < now
 
 fun dateParts(timestamp: Long): Triple<Int, Int, Int> = calendarAt(timestamp).let {
     Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH), it.get(Calendar.DAY_OF_MONTH))

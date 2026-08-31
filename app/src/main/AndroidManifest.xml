@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".YuyuLifeApplication"
         android:allowBackup="true"
+        android:icon="@drawable/tongtong_icon"
         android:label="@string/app_name"
+        android:roundIcon="@drawable/tongtong_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.YuyuLifeAssistant">
         <activity
@@ -16,7 +21,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".reminder.TodoReminderReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".reminder.BootCompletedReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
-

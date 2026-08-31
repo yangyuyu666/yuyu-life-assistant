@@ -1,6 +1,7 @@
 package com.yuyulife.assistant.ui.todo
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.OutlinedTextField
@@ -16,7 +17,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.yuyulife.assistant.ui.component.DatePickerButton
-import com.yuyulife.assistant.util.startOfDay
+import com.yuyulife.assistant.ui.component.TimePickerButton
+import com.yuyulife.assistant.util.dateWithTime
+import com.yuyulife.assistant.util.nextWholeHour
 
 @Composable
 fun AddTodoDialog(
@@ -24,13 +27,17 @@ fun AddTodoDialog(
     onAdd: (String, Long) -> Unit,
 ) {
     var title by remember { mutableStateOf("") }
-    var deadlineAt by remember { mutableStateOf(startOfDay(System.currentTimeMillis())) }
+    var deadlineAt by remember { mutableStateOf(nextWholeHour()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     fun submit() {
-        if (title.isNotBlank()) {
-            onAdd(title.trim(), deadlineAt)
-            onDismiss()
+        if (title.isBlank()) return
+        if (deadlineAt <= System.currentTimeMillis()) {
+            errorMessage = "截止时间必须晚于当前时间"
+            return
         }
+        onAdd(title.trim(), deadlineAt)
+        onDismiss()
     }
 
     AlertDialog(
@@ -48,9 +55,26 @@ fun AddTodoDialog(
                 )
                 DatePickerButton(
                     selectedDate = deadlineAt,
-                    onDateSelected = { deadlineAt = startOfDay(it) },
+                    onDateSelected = {
+                        deadlineAt = dateWithTime(it, deadlineAt)
+                        errorMessage = null
+                    },
                     labelPrefix = "截止：",
                 )
+                TimePickerButton(
+                    selectedTime = deadlineAt,
+                    onTimeSelected = {
+                        deadlineAt = it
+                        errorMessage = null
+                    },
+                )
+                errorMessage?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
         },
         confirmButton = {

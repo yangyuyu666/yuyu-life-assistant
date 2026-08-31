@@ -14,15 +14,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.yuyulife.assistant.data.repository.LedgerRepository
 import com.yuyulife.assistant.data.repository.TodoRepository
+import com.yuyulife.assistant.data.repository.SettingsRepository
 import com.yuyulife.assistant.ui.ledger.LedgerRoute
 import com.yuyulife.assistant.ui.cover.AppCoverScreen
 import com.yuyulife.assistant.ui.theme.YuyuLifeTheme
 import com.yuyulife.assistant.ui.todo.TodoRoute
+import com.yuyulife.assistant.ui.settings.SettingsRoute
 
 @Composable
 fun YuyuLifeApp(
     todoRepository: TodoRepository,
     ledgerRepository: LedgerRepository,
+    settingsRepository: SettingsRepository,
 ) {
     YuyuLifeTheme {
         var showCover by rememberSaveable { mutableStateOf(true) }
@@ -56,6 +59,12 @@ fun YuyuLifeApp(
 
                 AppSection.LEDGER -> LedgerRoute(
                     repository = ledgerRepository,
+                    modifier = Modifier.padding(contentPadding),
+                )
+
+                AppSection.SETTINGS -> SettingsRoute(
+                    settingsRepository = settingsRepository,
+                    todoRepository = todoRepository,
                     modifier = Modifier.padding(contentPadding),
                 )
             }

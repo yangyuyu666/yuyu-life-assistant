@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.yuyulife.assistant.domain.model.TodoItem
-import com.yuyulife.assistant.util.formatDate
+import com.yuyulife.assistant.util.formatDateTime
 import com.yuyulife.assistant.util.isDeadlineOverdue
 
 @Composable
@@ -59,7 +59,7 @@ fun TodoItemRow(
                 } == true
                 Text(
                     text = item.deadlineAt?.let {
-                        (if (overdue) "已逾期 · " else "截止 · ") + formatDate(it)
+                        (if (overdue) "已逾期 · " else "截止 · ") + formatDateTime(it)
                     } ?: "未设置截止日期",
                     color = if (overdue) {
                         MaterialTheme.colorScheme.error
