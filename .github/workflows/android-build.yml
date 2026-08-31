@@ -34,9 +34,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android API 37
-        run: sdkmanager "platforms;android-37" "build-tools;37.0.0"
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
@@ -53,4 +50,3 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
-
