@@ -1,5 +1,6 @@
 package com.yuyulife.assistant.ui.todo
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,9 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,11 +38,18 @@ fun TodoRoute(
     val viewModel: TodoViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.clearSelection() }
+    }
+
     TodoScreen(
         uiState = uiState,
         onAdd = viewModel::addTodo,
-        onCompletedChange = viewModel::setCompleted,
         onDelete = viewModel::delete,
+        onEnterSelection = viewModel::enterSelection,
+        onToggleSelection = viewModel::toggleSelection,
+        onClearSelection = viewModel::clearSelection,
+        onDeleteSelected = viewModel::deleteSelected,
         modifier = modifier,
     )
 }
@@ -47,11 +58,20 @@ fun TodoRoute(
 fun TodoScreen(
     uiState: TodoUiState,
     onAdd: (String, Long) -> Unit,
-    onCompletedChange: (TodoItem, Boolean) -> Unit,
     onDelete: (TodoItem) -> Unit,
+    onEnterSelection: (Long) -> Unit,
+    onToggleSelection: (Long) -> Unit,
+    onClearSelection: () -> Unit,
+    onDeleteSelected: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
+    var revealedTodoId by remember { mutableStateOf<Long?>(null) }
+
+    BackHandler(enabled = uiState.isSelectionMode, onBack = onClearSelection)
+    LaunchedEffect(uiState.isSelectionMode) {
+        if (uiState.isSelectionMode) revealedTodoId = null
+    }
 
     Column(
         modifier = modifier
@@ -70,13 +90,24 @@ fun TodoScreen(
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = "剩余 ${uiState.remainingCount} 项 · 共 ${uiState.items.size} 项",
+                    text = "共 ${uiState.items.size} 项事务",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            Button(onClick = { showAddDialog = true }) {
-                Text("添加")
+            if (uiState.isSelectionMode) {
+                Button(
+                    onClick = onDeleteSelected,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text("删除（${uiState.selectedCount}）")
+                }
+            } else {
+                Button(onClick = { showAddDialog = true }) {
+                    Text("添加")
+                }
             }
         }
 
@@ -95,9 +126,30 @@ fun TodoScreen(
                     items = uiState.items,
                     key = TodoItem::id,
                 ) { item ->
-                    TodoItemRow(
+                    SwipeRevealTodoRow(
                         item = item,
-                        onCompletedChange = { onCompletedChange(item, it) },
+                        selectionMode = uiState.isSelectionMode,
+                        selected = item.id in uiState.selectedIds,
+                        revealed = revealedTodoId == item.id,
+                        onRevealChange = { revealed ->
+                            revealedTodoId = if (revealed) item.id else {
+                                revealedTodoId.takeUnless { it == item.id }
+                            }
+                        },
+                        onClick = {
+                            if (uiState.isSelectionMode) {
+                                onToggleSelection(item.id)
+                            } else if (revealedTodoId == item.id) {
+                                revealedTodoId = null
+                            }
+                        },
+                        onLongClick = {
+                            if (uiState.isSelectionMode) {
+                                onToggleSelection(item.id)
+                            } else {
+                                onEnterSelection(item.id)
+                            }
+                        },
                         onDelete = { onDelete(item) },
                     )
                 }

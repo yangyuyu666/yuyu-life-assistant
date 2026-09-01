@@ -26,15 +26,15 @@ class TodoRepository(
         scheduleReminder(entity.copy(id = id).toDomain())
     }
 
-    suspend fun setCompleted(item: TodoItem, completed: Boolean) {
-        val updated = item.copy(isCompleted = completed)
-        dao.update(updated.toEntity())
-        if (completed) reminderScheduler.cancel(item.id) else scheduleReminder(updated)
-    }
-
     suspend fun delete(item: TodoItem) {
         dao.delete(item.toEntity())
         reminderScheduler.cancel(item.id)
+    }
+
+    suspend fun delete(items: List<TodoItem>) {
+        if (items.isEmpty()) return
+        dao.delete(items.map { it.toEntity() })
+        items.forEach { reminderScheduler.cancel(it.id) }
     }
 
     suspend fun reschedulePendingReminders() {

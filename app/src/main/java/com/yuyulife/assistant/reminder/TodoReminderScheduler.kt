@@ -15,7 +15,7 @@ class TodoReminderScheduler(context: Context) {
         val triggerAt = deadline - leadMinutes * MILLIS_PER_MINUTE
         val pendingIntent = reminderPendingIntent(todo)
 
-        if (triggerAt <= System.currentTimeMillis() || todo.isCompleted) {
+        if (triggerAt <= System.currentTimeMillis()) {
             alarmManager.cancel(pendingIntent)
             return
         }

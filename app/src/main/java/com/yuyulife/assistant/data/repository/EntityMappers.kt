@@ -9,7 +9,6 @@ import com.yuyulife.assistant.domain.model.TransactionType
 internal fun TodoEntity.toDomain() = TodoItem(
     id = id,
     title = title,
-    isCompleted = isCompleted,
     createdAt = createdAt,
     deadlineAt = deadlineAt,
 )
@@ -17,7 +16,6 @@ internal fun TodoEntity.toDomain() = TodoItem(
 internal fun TodoItem.toEntity() = TodoEntity(
     id = id,
     title = title,
-    isCompleted = isCompleted,
     createdAt = createdAt,
     deadlineAt = deadlineAt,
 )

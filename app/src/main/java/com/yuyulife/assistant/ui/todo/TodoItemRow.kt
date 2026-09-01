@@ -1,5 +1,7 @@
 package com.yuyulife.assistant.ui.todo
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
@@ -9,7 +11,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,23 +20,35 @@ import com.yuyulife.assistant.domain.model.TodoItem
 import com.yuyulife.assistant.util.formatDateTime
 import com.yuyulife.assistant.util.isDeadlineOverdue
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TodoItemRow(
     item: TodoItem,
-    onCompletedChange: (Boolean) -> Unit,
-    onDelete: () -> Unit,
+    selectionMode: Boolean,
+    selected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Checkbox(
-                checked = item.isCompleted,
-                onCheckedChange = onCompletedChange,
-            )
+            if (selectionMode) {
+                Checkbox(
+                    checked = selected,
+                    onCheckedChange = { onClick() },
+                )
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -43,18 +56,10 @@ fun TodoItemRow(
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (item.isCompleted) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    textDecoration = if (item.isCompleted) {
-                        TextDecoration.LineThrough
-                    } else {
-                        TextDecoration.None
-                    },
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = TextDecoration.None,
                 )
-                val overdue = !item.isCompleted && item.deadlineAt?.let {
+                val overdue = item.deadlineAt?.let {
                     isDeadlineOverdue(it)
                 } == true
                 Text(
@@ -68,9 +73,6 @@ fun TodoItemRow(
                     },
                     style = MaterialTheme.typography.bodySmall,
                 )
-            }
-            TextButton(onClick = onDelete) {
-                Text("删除")
             }
         }
     }

@@ -27,6 +27,14 @@ class SettingsViewModel(
         viewModelScope.launch { todoRepository.reschedulePendingReminders() }
     }
 
+    fun setCustomBackgroundEnabled(enabled: Boolean) {
+        settingsRepository.setCustomBackgroundEnabled(enabled)
+    }
+
+    fun setCustomBackground(uri: String) {
+        settingsRepository.setCustomBackground(uri)
+    }
+
     companion object {
         fun factory(
             settingsRepository: SettingsRepository,

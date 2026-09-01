@@ -40,13 +40,38 @@ jobs:
       - name: Make Gradle Wrapper executable
         run: chmod +x gradlew
 
-      - name: Run tests and build APK
-        run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Validate signing secrets
+        env:
+          SIGNING_KEY: ${{ secrets.YUYU_SIGNING_KEY_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.YUYU_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.YUYU_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.YUYU_KEY_PASSWORD }}
+        run: |
+          test -n "$SIGNING_KEY" || { echo "Missing YUYU_SIGNING_KEY_BASE64"; exit 1; }
+          test -n "$KEYSTORE_PASSWORD" || { echo "Missing YUYU_KEYSTORE_PASSWORD"; exit 1; }
+          test -n "$KEY_ALIAS" || { echo "Missing YUYU_KEY_ALIAS"; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "Missing YUYU_KEY_PASSWORD"; exit 1; }
+
+      - name: Restore release keystore
+        env:
+          SIGNING_KEY: ${{ secrets.YUYU_SIGNING_KEY_BASE64 }}
+        run: printf '%s' "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/yuyu-release.jks"
+
+      - name: Build signed APK
+        env:
+          YUYU_KEYSTORE_PATH: ${{ runner.temp }}/yuyu-release.jks
+          YUYU_KEYSTORE_PASSWORD: ${{ secrets.YUYU_KEYSTORE_PASSWORD }}
+          YUYU_KEY_ALIAS: ${{ secrets.YUYU_KEY_ALIAS }}
+          YUYU_KEY_PASSWORD: ${{ secrets.YUYU_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: yuyu-life-assistant-debug-${{ github.run_number }}
-          path: app/build/outputs/apk/debug/*.apk
+          name: yuyu-life-assistant-release-${{ github.run_number }}
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 7

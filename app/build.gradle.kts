@@ -12,15 +12,29 @@ android {
         applicationId = "com.yuyulife.assistant"
         minSdk = 23
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val storePath = providers.environmentVariable("YUYU_KEYSTORE_PATH").orNull
+            if (!storePath.isNullOrBlank()) {
+                storeFile = file(storePath)
+                storePassword = providers.environmentVariable("YUYU_KEYSTORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("YUYU_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("YUYU_KEY_PASSWORD").orNull
+                storeType = "JKS"
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

@@ -1,6 +1,11 @@
 package com.yuyulife.assistant.ui.settings
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,6 +47,8 @@ fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onReminderLeadTimeSelected = viewModel::setTodoReminderLeadMinutes,
+        onCustomBackgroundEnabledChange = viewModel::setCustomBackgroundEnabled,
+        onCustomBackgroundSelected = viewModel::setCustomBackground,
         modifier = modifier,
     )
 }
@@ -47,14 +57,34 @@ fun SettingsRoute(
 fun SettingsScreen(
     uiState: SettingsUiState,
     onReminderLeadTimeSelected: (Int) -> Unit,
+    onCustomBackgroundEnabledChange: (Boolean) -> Unit,
+    onCustomBackgroundSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showReminderDialog by remember { mutableStateOf(false) }
     val selectedMinutes = uiState.settings.todoReminderLeadMinutes
+    val context = LocalContext.current
+    val backgroundUri = uiState.settings.customBackgroundUri
+    val backgroundPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri?.let {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            } catch (_: SecurityException) {
+                // Some document providers already grant sufficient long-term access.
+            }
+            onCustomBackgroundSelected(it.toString())
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -92,6 +122,48 @@ fun SettingsScreen(
                     )
                 }
                 Text("›", style = MaterialTheme.typography.headlineSmall)
+            }
+        }
+
+        Text("外观管理", style = MaterialTheme.typography.titleMedium)
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text("自定义背景", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            if (backgroundUri == null) "从手机选择待办和账本背景" else "已选择背景图片",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    Switch(
+                        checked = uiState.settings.customBackgroundEnabled,
+                        onCheckedChange = { enabled ->
+                            if (enabled && backgroundUri == null) {
+                                backgroundPicker.launch(arrayOf("image/*"))
+                            } else {
+                                onCustomBackgroundEnabledChange(enabled)
+                            }
+                        },
+                    )
+                }
+                OutlinedButton(
+                    onClick = { backgroundPicker.launch(arrayOf("image/*")) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (backgroundUri == null) "选择背景图片" else "更换背景图片")
+                }
             }
         }
     }
