@@ -83,6 +83,23 @@ jobs:
           YUYU_KEY_PASSWORD: ${{ secrets.YUYU_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
 
+      - name: Verify release signing certificate
+        env:
+          EXPECTED_CERT_SHA256: 50739f4150d71bc6117ad5d28b78f23fe9b6a587c3e5722067f60b7b5dc497b3
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/release -name '*.apk' -print -quit)
+          APKSIGNER_PATH=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)
+          test -n "$APK_PATH" || { echo "Release APK not found"; exit 1; }
+          test -n "$APKSIGNER_PATH" || { echo "apksigner not found"; exit 1; }
+          ACTUAL_CERT_SHA256=$(
+            "$APKSIGNER_PATH" verify --print-certs "$APK_PATH" \
+              | sed -n 's/^Signer #1 certificate SHA-256 digest: //p'
+          )
+          test "$ACTUAL_CERT_SHA256" = "$EXPECTED_CERT_SHA256" || {
+            echo "Release signing certificate mismatch"
+            exit 1
+          }
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
