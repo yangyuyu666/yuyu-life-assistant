@@ -95,7 +95,7 @@ private fun seedDefaultLedgerCategories(database: SupportSQLiteDatabase) {
     defaults.forEach { (type, name, order) ->
         database.execSQL(
             "INSERT OR IGNORE INTO ledger_categories (type, name, sortOrder) VALUES (?, ?, ?)",
-            arrayOf(type, name, order),
+            arrayOf<Any?>(type, name, order),
         )
     }
 }
