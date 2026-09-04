@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yuyulife.assistant.data.repository.LedgerRepository
+import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
 import com.yuyulife.assistant.domain.model.LedgerEntry
 import com.yuyulife.assistant.domain.model.TransactionType
 import com.yuyulife.assistant.ui.component.EmptyState
@@ -29,9 +30,12 @@ import com.yuyulife.assistant.ui.component.EmptyState
 @Composable
 fun LedgerRoute(
     repository: LedgerRepository,
+    categoryRepository: LedgerCategoryRepository,
     modifier: Modifier = Modifier,
 ) {
-    val factory = remember(repository) { LedgerViewModel.factory(repository) }
+    val factory = remember(repository, categoryRepository) {
+        LedgerViewModel.factory(repository, categoryRepository)
+    }
     val viewModel: LedgerViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -42,6 +46,7 @@ fun LedgerRoute(
         onModeSelected = viewModel::selectMode,
         onPeriodSelected = viewModel::selectPeriod,
         onMovePeriod = viewModel::movePeriod,
+        onCategorySelected = viewModel::selectCategory,
         modifier = modifier,
     )
 }
@@ -49,14 +54,16 @@ fun LedgerRoute(
 @Composable
 fun LedgerScreen(
     uiState: LedgerUiState,
-    onAdd: (TransactionType, Long, String, String, Long) -> Unit,
+    onAdd: (Long, Long, String, Long) -> Unit,
     onDelete: (Long) -> Unit,
     onModeSelected: (LedgerPeriodMode) -> Unit,
     onPeriodSelected: (Long) -> Unit,
     onMovePeriod: (Int) -> Unit,
+    onCategorySelected: (Long?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
+    var revealedEntryId by remember { mutableStateOf<Long?>(null) }
 
     Column(
         modifier = modifier
@@ -93,6 +100,15 @@ fun LedgerScreen(
             onMovePeriod = onMovePeriod,
         )
 
+        LedgerCategoryFilter(
+            categories = uiState.categories,
+            selectedCategoryId = uiState.selectedCategoryId,
+            onCategorySelected = {
+                revealedEntryId = null
+                onCategorySelected(it)
+            },
+        )
+
         LedgerSummaryCard(
             summary = uiState.summary,
             periodLabel = if (uiState.periodMode == LedgerPeriodMode.DAY) "当日" else "当月",
@@ -117,8 +133,14 @@ fun LedgerScreen(
                     items = uiState.entries,
                     key = LedgerEntry::id,
                 ) { entry ->
-                    LedgerEntryRow(
+                    SwipeRevealLedgerRow(
                         entry = entry,
+                        revealed = revealedEntryId == entry.id,
+                        onRevealChange = { revealed ->
+                            revealedEntryId = if (revealed) entry.id else {
+                                revealedEntryId.takeUnless { it == entry.id }
+                            }
+                        },
                         onDelete = { onDelete(entry.id) },
                     )
                 }
@@ -131,6 +153,7 @@ fun LedgerScreen(
             onDismiss = { showAddDialog = false },
             onAdd = onAdd,
             initialDate = uiState.selectedPeriod,
+            categories = uiState.categories,
         )
     }
 }

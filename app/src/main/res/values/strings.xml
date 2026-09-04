@@ -4,4 +4,8 @@
     <string name="todo_reminder_default_title">有一项待办需要处理</string>
     <string name="todo_reminder_channel_name">待办截止提醒</string>
     <string name="todo_reminder_channel_description">在待办截止前发送提醒</string>
+    <string name="todo_strong_reminder_channel_name">强化待办提醒</string>
+    <string name="todo_strong_reminder_channel_description">使用醒目的声音和振动提醒待办</string>
+    <string name="todo_alarm_channel_name">待办闹钟</string>
+    <string name="todo_alarm_channel_description">在锁屏上显示并持续提醒待办</string>
 </resources>

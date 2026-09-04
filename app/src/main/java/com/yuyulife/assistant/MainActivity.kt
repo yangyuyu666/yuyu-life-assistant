@@ -20,6 +20,7 @@ class MainActivity : ComponentActivity() {
             YuyuLifeApp(
                 todoRepository = app.todoRepository,
                 ledgerRepository = app.ledgerRepository,
+                ledgerCategoryRepository = app.ledgerCategoryRepository,
                 settingsRepository = app.settingsRepository,
             )
         }

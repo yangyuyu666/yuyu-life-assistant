@@ -29,17 +29,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yuyulife.assistant.data.repository.SettingsRepository
+import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
+import com.yuyulife.assistant.data.repository.CategoryChangeResult
+import com.yuyulife.assistant.domain.model.TransactionType
 import com.yuyulife.assistant.data.repository.TodoRepository
 import com.yuyulife.assistant.domain.model.ReminderLeadTime
+import com.yuyulife.assistant.domain.model.ReminderMode
 
 @Composable
 fun SettingsRoute(
     settingsRepository: SettingsRepository,
     todoRepository: TodoRepository,
+    categoryRepository: LedgerCategoryRepository,
     modifier: Modifier = Modifier,
 ) {
-    val factory = remember(settingsRepository, todoRepository) {
-        SettingsViewModel.factory(settingsRepository, todoRepository)
+    val factory = remember(settingsRepository, todoRepository, categoryRepository) {
+        SettingsViewModel.factory(settingsRepository, todoRepository, categoryRepository)
     }
     val viewModel: SettingsViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -47,8 +52,13 @@ fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onReminderLeadTimeSelected = viewModel::setTodoReminderLeadMinutes,
+        onReminderModeSelected = viewModel::setReminderMode,
+        onReminderPermissionReturned = viewModel::refreshReminderSchedule,
         onCustomBackgroundEnabledChange = viewModel::setCustomBackgroundEnabled,
         onCustomBackgroundSelected = viewModel::setCustomBackground,
+        onAddCategory = viewModel::addCategory,
+        onRenameCategory = viewModel::renameCategory,
+        onDeleteCategory = viewModel::deleteCategory,
         modifier = modifier,
     )
 }
@@ -57,11 +67,18 @@ fun SettingsRoute(
 fun SettingsScreen(
     uiState: SettingsUiState,
     onReminderLeadTimeSelected: (Int) -> Unit,
+    onReminderModeSelected: (ReminderMode) -> Unit,
+    onReminderPermissionReturned: () -> Unit,
     onCustomBackgroundEnabledChange: (Boolean) -> Unit,
     onCustomBackgroundSelected: (String) -> Unit,
+    onAddCategory: (TransactionType, String, (CategoryChangeResult) -> Unit) -> Unit,
+    onRenameCategory: (Long, String, (CategoryChangeResult) -> Unit) -> Unit,
+    onDeleteCategory: (Long, (CategoryChangeResult) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showReminderDialog by remember { mutableStateOf(false) }
+    var showReminderModeDialog by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
     val selectedMinutes = uiState.settings.todoReminderLeadMinutes
     val context = LocalContext.current
     val backgroundUri = uiState.settings.customBackgroundUri
@@ -101,6 +118,31 @@ fun SettingsScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable { showReminderModeDialog = true },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text("提醒方式", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        uiState.settings.reminderMode.label,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text("›", style = MaterialTheme.typography.headlineSmall)
+            }
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
                 .clickable { showReminderDialog = true },
         ) {
             Row(
@@ -124,6 +166,11 @@ fun SettingsScreen(
                 Text("›", style = MaterialTheme.typography.headlineSmall)
             }
         }
+
+        ReminderPermissionCard(
+            mode = uiState.settings.reminderMode,
+            onPermissionSettingsReturned = onReminderPermissionReturned,
+        )
 
         Text("外观管理", style = MaterialTheme.typography.titleMedium)
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -166,6 +213,30 @@ fun SettingsScreen(
                 }
             }
         }
+
+        Text("账本管理", style = MaterialTheme.typography.titleMedium)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showCategoryDialog = true },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("收支分类", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "管理收入和支出的分类",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text("›", style = MaterialTheme.typography.headlineSmall)
+            }
+        }
     }
 
     if (showReminderDialog) {
@@ -173,6 +244,24 @@ fun SettingsScreen(
             selectedMinutes = selectedMinutes,
             onSelect = onReminderLeadTimeSelected,
             onDismiss = { showReminderDialog = false },
+        )
+    }
+
+    if (showReminderModeDialog) {
+        ReminderModeDialog(
+            selectedMode = uiState.settings.reminderMode,
+            onSelect = onReminderModeSelected,
+            onDismiss = { showReminderModeDialog = false },
+        )
+    }
+
+    if (showCategoryDialog) {
+        CategoryManagementDialog(
+            categories = uiState.categories,
+            onAdd = onAddCategory,
+            onRename = onRenameCategory,
+            onDelete = onDeleteCategory,
+            onDismiss = { showCategoryDialog = false },
         )
     }
 }

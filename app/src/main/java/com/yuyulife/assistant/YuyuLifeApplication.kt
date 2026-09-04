@@ -2,10 +2,13 @@ package com.yuyulife.assistant
 
 import android.app.Application
 import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.yuyulife.assistant.data.local.AppDatabase
+import com.yuyulife.assistant.data.local.DATABASE_CREATE_CALLBACK
+import com.yuyulife.assistant.data.local.MIGRATION_1_2
+import com.yuyulife.assistant.data.local.MIGRATION_2_3
+import com.yuyulife.assistant.data.local.MIGRATION_3_4
 import com.yuyulife.assistant.data.repository.LedgerRepository
+import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
 import com.yuyulife.assistant.data.repository.SettingsRepository
 import com.yuyulife.assistant.data.repository.TodoRepository
 import com.yuyulife.assistant.reminder.TodoReminderScheduler
@@ -21,7 +24,10 @@ class YuyuLifeApplication : Application() {
             applicationContext,
             AppDatabase::class.java,
             "yuyu-life.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        )
+            .addCallback(DATABASE_CREATE_CALLBACK)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .build()
     }
 
     val settingsRepository: SettingsRepository by lazy {
@@ -40,6 +46,10 @@ class YuyuLifeApplication : Application() {
         LedgerRepository(database.ledgerDao())
     }
 
+    val ledgerCategoryRepository: LedgerCategoryRepository by lazy {
+        LedgerCategoryRepository(database.ledgerCategoryDao())
+    }
+
     override fun onCreate() {
         super.onCreate()
         rescheduleReminders()
@@ -55,29 +65,4 @@ class YuyuLifeApplication : Application() {
         }
     }
 
-    companion object {
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE todos ADD COLUMN deadlineAt INTEGER")
-            }
-        }
-
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
-                    "CREATE TABLE todos_new (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                        "title TEXT NOT NULL, " +
-                        "createdAt INTEGER NOT NULL, " +
-                        "deadlineAt INTEGER)",
-                )
-                database.execSQL(
-                    "INSERT INTO todos_new (id, title, createdAt, deadlineAt) " +
-                        "SELECT id, title, createdAt, deadlineAt FROM todos",
-                )
-                database.execSQL("DROP TABLE todos")
-                database.execSQL("ALTER TABLE todos_new RENAME TO todos")
-            }
-        }
-    }
 }

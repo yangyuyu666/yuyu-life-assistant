@@ -2,6 +2,7 @@ package com.yuyulife.assistant.data.repository
 
 import android.content.Context
 import com.yuyulife.assistant.domain.model.AppSettings
+import com.yuyulife.assistant.domain.model.ReminderMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +22,11 @@ class SettingsRepository(context: Context) {
         mutableSettings.value = mutableSettings.value.copy(
             todoReminderLeadMinutes = minutes,
         )
+    }
+
+    fun setReminderMode(mode: ReminderMode) {
+        preferences.edit().putString(KEY_REMINDER_MODE, mode.name).apply()
+        mutableSettings.value = mutableSettings.value.copy(reminderMode = mode)
     }
 
     fun setCustomBackgroundEnabled(enabled: Boolean) {
@@ -46,6 +52,9 @@ class SettingsRepository(context: Context) {
             KEY_TODO_REMINDER_LEAD_MINUTES,
             AppSettings.DEFAULT_REMINDER_LEAD_MINUTES,
         ),
+        reminderMode = preferences.getString(KEY_REMINDER_MODE, null)
+            ?.let { saved -> ReminderMode.entries.firstOrNull { it.name == saved } }
+            ?: ReminderMode.NORMAL,
         customBackgroundEnabled = preferences.getBoolean(
             KEY_CUSTOM_BACKGROUND_ENABLED,
             false,
@@ -56,6 +65,7 @@ class SettingsRepository(context: Context) {
     companion object {
         private const val PREFERENCES_NAME = "yuyu_life_settings"
         private const val KEY_TODO_REMINDER_LEAD_MINUTES = "todo_reminder_lead_minutes"
+        private const val KEY_REMINDER_MODE = "todo_reminder_mode"
         private const val KEY_CUSTOM_BACKGROUND_ENABLED = "custom_background_enabled"
         private const val KEY_CUSTOM_BACKGROUND_URI = "custom_background_uri"
     }

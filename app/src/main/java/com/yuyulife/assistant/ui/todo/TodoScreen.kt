@@ -50,6 +50,8 @@ fun TodoRoute(
         onToggleSelection = viewModel::toggleSelection,
         onClearSelection = viewModel::clearSelection,
         onDeleteSelected = viewModel::deleteSelected,
+        onToggleSelectAll = viewModel::toggleSelectAll,
+        onUpdateDeadline = viewModel::updateDeadline,
         modifier = modifier,
     )
 }
@@ -63,14 +65,17 @@ fun TodoScreen(
     onToggleSelection: (Long) -> Unit,
     onClearSelection: () -> Unit,
     onDeleteSelected: () -> Unit,
+    onToggleSelectAll: () -> Unit,
+    onUpdateDeadline: (TodoItem, Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
-    var revealedTodoId by remember { mutableStateOf<Long?>(null) }
+    var revealedTodo by remember { mutableStateOf<Pair<Long, TodoSwipeAction>?>(null) }
+    var editingTodo by remember { mutableStateOf<TodoItem?>(null) }
 
     BackHandler(enabled = uiState.isSelectionMode, onBack = onClearSelection)
     LaunchedEffect(uiState.isSelectionMode) {
-        if (uiState.isSelectionMode) revealedTodoId = null
+        if (uiState.isSelectionMode) revealedTodo = null
     }
 
     Column(
@@ -96,13 +101,18 @@ fun TodoScreen(
                 )
             }
             if (uiState.isSelectionMode) {
-                Button(
-                    onClick = onDeleteSelected,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Text("删除（${uiState.selectedCount}）")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = onToggleSelectAll) {
+                        Text(if (uiState.selectedCount == uiState.items.size) "取消全选" else "全选")
+                    }
+                    Button(
+                        onClick = onDeleteSelected,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                        ),
+                    ) {
+                        Text("删除（${uiState.selectedCount}）")
+                    }
                 }
             } else {
                 Button(onClick = { showAddDialog = true }) {
@@ -130,17 +140,15 @@ fun TodoScreen(
                         item = item,
                         selectionMode = uiState.isSelectionMode,
                         selected = item.id in uiState.selectedIds,
-                        revealed = revealedTodoId == item.id,
-                        onRevealChange = { revealed ->
-                            revealedTodoId = if (revealed) item.id else {
-                                revealedTodoId.takeUnless { it == item.id }
-                            }
+                        revealedAction = revealedTodo?.takeIf { it.first == item.id }?.second,
+                        onRevealChange = { action ->
+                            revealedTodo = action?.let { item.id to it }
                         },
                         onClick = {
                             if (uiState.isSelectionMode) {
                                 onToggleSelection(item.id)
-                            } else if (revealedTodoId == item.id) {
-                                revealedTodoId = null
+                            } else if (revealedTodo?.first == item.id) {
+                                revealedTodo = null
                             }
                         },
                         onLongClick = {
@@ -151,6 +159,10 @@ fun TodoScreen(
                             }
                         },
                         onDelete = { onDelete(item) },
+                        onEditDeadline = {
+                            revealedTodo = null
+                            editingTodo = item
+                        },
                     )
                 }
             }
@@ -161,6 +173,14 @@ fun TodoScreen(
         AddTodoDialog(
             onDismiss = { showAddDialog = false },
             onAdd = onAdd,
+        )
+    }
+
+    editingTodo?.let { item ->
+        EditTodoDeadlineDialog(
+            item = item,
+            onDismiss = { editingTodo = null },
+            onSave = { deadline -> onUpdateDeadline(item, deadline) },
         )
     }
 }

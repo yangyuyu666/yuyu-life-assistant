@@ -31,6 +31,13 @@ class TodoRepository(
         reminderScheduler.cancel(item.id)
     }
 
+    suspend fun updateDeadline(item: TodoItem, deadlineAt: Long) {
+        reminderScheduler.cancel(item.id)
+        if (dao.updateDeadline(item.id, deadlineAt) > 0) {
+            scheduleReminder(item.copy(deadlineAt = deadlineAt))
+        }
+    }
+
     suspend fun delete(items: List<TodoItem>) {
         if (items.isEmpty()) return
         dao.delete(items.map { it.toEntity() })
@@ -47,6 +54,7 @@ class TodoRepository(
         reminderScheduler.schedule(
             todo = item,
             leadMinutes = settingsRepository.settings.value.todoReminderLeadMinutes,
+            mode = settingsRepository.settings.value.reminderMode,
         )
     }
 }

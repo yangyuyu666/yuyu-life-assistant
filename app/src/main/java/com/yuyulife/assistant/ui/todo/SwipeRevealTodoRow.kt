@@ -34,11 +34,12 @@ fun SwipeRevealTodoRow(
     item: TodoItem,
     selectionMode: Boolean,
     selected: Boolean,
-    revealed: Boolean,
-    onRevealChange: (Boolean) -> Unit,
+    revealedAction: TodoSwipeAction?,
+    onRevealChange: (TodoSwipeAction?) -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onDelete: () -> Unit,
+    onEditDeadline: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val actionWidth = 88.dp
@@ -48,7 +49,8 @@ fun SwipeRevealTodoRow(
     val targetOffset = when {
         selectionMode -> 0f
         dragging -> dragOffset
-        revealed -> -actionWidthPx
+        revealedAction == TodoSwipeAction.DELETE -> -actionWidthPx
+        revealedAction == TodoSwipeAction.EDIT_DEADLINE -> actionWidthPx
         else -> 0f
     }
     val displayedOffset by animateFloatAsState(
@@ -56,7 +58,7 @@ fun SwipeRevealTodoRow(
         label = "todoSwipeOffset",
     )
     val dragState = rememberDraggableState { delta ->
-        dragOffset = (dragOffset + delta).coerceIn(-actionWidthPx, 0f)
+        dragOffset = (dragOffset + delta).coerceIn(-actionWidthPx, actionWidthPx)
     }
 
     Box(
@@ -74,8 +76,26 @@ fun SwipeRevealTodoRow(
                 modifier = Modifier
                     .width(actionWidth)
                     .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .align(Alignment.CenterStart)
                     .clickable {
-                        onRevealChange(false)
+                        onRevealChange(null)
+                        onEditDeadline()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "改时间",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(actionWidth)
+                    .fillMaxHeight()
+                    .clickable {
+                        onRevealChange(null)
                         onDelete()
                     },
                 contentAlignment = Alignment.Center,
@@ -102,11 +122,21 @@ fun SwipeRevealTodoRow(
                     enabled = !selectionMode,
                     onDragStarted = {
                         dragging = true
-                        dragOffset = if (revealed) -actionWidthPx else 0f
+                        dragOffset = when (revealedAction) {
+                            TodoSwipeAction.DELETE -> -actionWidthPx
+                            TodoSwipeAction.EDIT_DEADLINE -> actionWidthPx
+                            null -> 0f
+                        }
                     },
                     onDragStopped = {
                         dragging = false
-                        onRevealChange(dragOffset <= -actionWidthPx * 0.4f)
+                        onRevealChange(
+                            when {
+                                dragOffset <= -actionWidthPx * 0.4f -> TodoSwipeAction.DELETE
+                                dragOffset >= actionWidthPx * 0.4f -> TodoSwipeAction.EDIT_DEADLINE
+                                else -> null
+                            },
+                        )
                     },
                 ),
         )

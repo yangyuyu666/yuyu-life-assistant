@@ -17,6 +17,9 @@ interface TodoDao {
     @Insert
     suspend fun insert(item: TodoEntity): Long
 
+    @Query("UPDATE todos SET deadlineAt = :deadlineAt WHERE id = :id")
+    suspend fun updateDeadline(id: Long, deadlineAt: Long): Int
+
     @Query("SELECT * FROM todos WHERE deadlineAt IS NOT NULL")
     suspend fun getPendingWithDeadline(): List<TodoEntity>
 

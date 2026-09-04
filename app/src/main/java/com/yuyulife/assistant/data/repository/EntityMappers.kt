@@ -1,6 +1,7 @@
 package com.yuyulife.assistant.data.repository
 
-import com.yuyulife.assistant.data.local.LedgerEntity
+import com.yuyulife.assistant.data.local.LedgerCategoryUsageRecord
+import com.yuyulife.assistant.data.local.LedgerEntryRecord
 import com.yuyulife.assistant.data.local.TodoEntity
 import com.yuyulife.assistant.domain.model.LedgerEntry
 import com.yuyulife.assistant.domain.model.TodoItem
@@ -20,20 +21,20 @@ internal fun TodoItem.toEntity() = TodoEntity(
     deadlineAt = deadlineAt,
 )
 
-internal fun LedgerEntity.toDomain() = LedgerEntry(
+internal fun LedgerEntryRecord.toDomain() = LedgerEntry(
     id = id,
     type = TransactionType.entries.firstOrNull { it.name == type } ?: TransactionType.EXPENSE,
     amountCents = amountCents,
+    categoryId = categoryId,
     category = category,
     note = note,
     occurredAt = occurredAt,
 )
 
-internal fun LedgerEntry.toEntity() = LedgerEntity(
+internal fun LedgerCategoryUsageRecord.toDomain() = com.yuyulife.assistant.domain.model.LedgerCategory(
     id = id,
-    type = type.name,
-    amountCents = amountCents,
-    category = category,
-    note = note,
-    occurredAt = occurredAt,
+    type = TransactionType.entries.firstOrNull { it.name == type } ?: TransactionType.EXPENSE,
+    name = name,
+    sortOrder = sortOrder,
+    usageCount = usageCount,
 )

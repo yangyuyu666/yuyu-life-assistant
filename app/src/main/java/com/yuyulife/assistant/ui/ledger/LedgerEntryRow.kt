@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +20,6 @@ import com.yuyulife.assistant.util.formatTimestamp
 @Composable
 fun LedgerEntryRow(
     entry: LedgerEntry,
-    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -55,9 +53,6 @@ fun LedgerEntryRow(
                     },
                     style = MaterialTheme.typography.titleMedium,
                 )
-                TextButton(onClick = onDelete) {
-                    Text("删除")
-                }
             }
         }
     }

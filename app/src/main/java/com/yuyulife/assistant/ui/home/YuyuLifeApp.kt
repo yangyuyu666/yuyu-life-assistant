@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yuyulife.assistant.data.repository.LedgerRepository
+import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
 import com.yuyulife.assistant.data.repository.TodoRepository
 import com.yuyulife.assistant.data.repository.SettingsRepository
 import com.yuyulife.assistant.ui.ledger.LedgerRoute
@@ -39,6 +40,7 @@ import com.yuyulife.assistant.ui.background.rememberBackgroundImage
 fun YuyuLifeApp(
     todoRepository: TodoRepository,
     ledgerRepository: LedgerRepository,
+    ledgerCategoryRepository: LedgerCategoryRepository,
     settingsRepository: SettingsRepository,
 ) {
     YuyuLifeTheme {
@@ -119,12 +121,14 @@ fun YuyuLifeApp(
 
                     AppSection.LEDGER -> LedgerRoute(
                         repository = ledgerRepository,
+                        categoryRepository = ledgerCategoryRepository,
                         modifier = Modifier.padding(contentPadding),
                     )
 
                     AppSection.SETTINGS -> SettingsRoute(
                         settingsRepository = settingsRepository,
                         todoRepository = todoRepository,
+                        categoryRepository = ledgerCategoryRepository,
                         modifier = Modifier.padding(contentPadding),
                     )
                 }

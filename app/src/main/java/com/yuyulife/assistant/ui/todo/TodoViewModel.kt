@@ -45,8 +45,18 @@ class TodoViewModel(
         selectedIds.value = emptySet()
     }
 
+    fun toggleSelectAll() {
+        val allIds = uiState.value.items.mapTo(mutableSetOf()) { it.id }
+        selectedIds.value = toggleSelectAll(selectedIds.value, allIds)
+    }
+
     fun delete(item: TodoItem) {
         viewModelScope.launch { repository.delete(item) }
+    }
+
+    fun updateDeadline(item: TodoItem, deadlineAt: Long) {
+        if (deadlineAt <= System.currentTimeMillis()) return
+        viewModelScope.launch { repository.updateDeadline(item, deadlineAt) }
     }
 
     fun deleteSelected() {

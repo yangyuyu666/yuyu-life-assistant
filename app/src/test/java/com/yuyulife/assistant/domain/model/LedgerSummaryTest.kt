@@ -23,6 +23,7 @@ class LedgerSummaryTest {
         id = 0,
         type = type,
         amountCents = amountCents,
+        categoryId = if (type == TransactionType.INCOME) 2 else 1,
         category = "测试",
         note = "",
         occurredAt = 0,

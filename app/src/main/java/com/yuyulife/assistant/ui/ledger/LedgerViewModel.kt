@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yuyulife.assistant.data.repository.LedgerRepository
+import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
 import com.yuyulife.assistant.domain.model.LedgerSummary
 import com.yuyulife.assistant.domain.model.TransactionType
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,11 +21,19 @@ import com.yuyulife.assistant.util.startOfMonth
 
 class LedgerViewModel(
     private val repository: LedgerRepository,
+    private val categoryRepository: LedgerCategoryRepository,
 ) : ViewModel() {
     private val selectedMode = MutableStateFlow(LedgerPeriodMode.DAY)
     private val selectedPeriod = MutableStateFlow(startOfDay(System.currentTimeMillis()))
+    private val selectedCategoryId = MutableStateFlow<Long?>(null)
 
-    val uiState = combine(repository.entries, selectedMode, selectedPeriod) { entries, mode, period ->
+    val uiState = combine(
+        repository.entries,
+        categoryRepository.categories,
+        selectedMode,
+        selectedPeriod,
+        selectedCategoryId,
+    ) { entries, categories, mode, period, requestedCategoryId ->
             val start = when (mode) {
                 LedgerPeriodMode.DAY -> startOfDay(period)
                 LedgerPeriodMode.MONTH -> startOfMonth(period)
@@ -33,12 +42,17 @@ class LedgerViewModel(
                 LedgerPeriodMode.DAY -> endOfSelectedDayExclusive(period)
                 LedgerPeriodMode.MONTH -> endOfSelectedMonthExclusive(period)
             }
-            val filteredEntries = entries.filter { it.occurredAt in start until endExclusive }
+            val validCategoryId = requestedCategoryId?.takeIf { id ->
+                categories.any { it.id == id }
+            }
+            val filteredEntries = filterLedgerEntries(entries, start, endExclusive, validCategoryId)
             LedgerUiState(
                 entries = filteredEntries,
                 summary = LedgerSummary.from(filteredEntries),
                 periodMode = mode,
                 selectedPeriod = start,
+                categories = categories,
+                selectedCategoryId = validCategoryId,
             )
         }
         .stateIn(
@@ -48,15 +62,14 @@ class LedgerViewModel(
         )
 
     fun addEntry(
-        type: TransactionType,
         amountCents: Long,
-        category: String,
+        categoryId: Long,
         note: String,
         occurredAt: Long,
     ) {
-        if (amountCents <= 0 || category.isBlank()) return
+        if (amountCents <= 0 || uiState.value.categories.none { it.id == categoryId }) return
         viewModelScope.launch {
-            repository.add(type, amountCents, category, note, occurredAt)
+            repository.add(amountCents, categoryId, note, occurredAt)
         }
     }
 
@@ -82,17 +95,24 @@ class LedgerViewModel(
         }
     }
 
+    fun selectCategory(categoryId: Long?) {
+        selectedCategoryId.value = categoryId
+    }
+
     fun deleteEntry(entryId: Long) {
         val entry = uiState.value.entries.firstOrNull { it.id == entryId } ?: return
         viewModelScope.launch { repository.delete(entry) }
     }
 
     companion object {
-        fun factory(repository: LedgerRepository): ViewModelProvider.Factory =
+        fun factory(
+            repository: LedgerRepository,
+            categoryRepository: LedgerCategoryRepository,
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return LedgerViewModel(repository) as T
+                    return LedgerViewModel(repository, categoryRepository) as T
                 }
             }
     }
