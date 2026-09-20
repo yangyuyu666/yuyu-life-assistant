@@ -28,11 +28,13 @@ import com.yuyulife.assistant.data.repository.LedgerRepository
 import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
 import com.yuyulife.assistant.data.repository.TodoRepository
 import com.yuyulife.assistant.data.repository.SettingsRepository
+import com.yuyulife.assistant.data.repository.MemoRepository
 import com.yuyulife.assistant.ui.ledger.LedgerRoute
 import com.yuyulife.assistant.ui.cover.AppCoverScreen
 import com.yuyulife.assistant.ui.theme.YuyuLifeTheme
 import com.yuyulife.assistant.ui.todo.TodoRoute
 import com.yuyulife.assistant.ui.settings.SettingsRoute
+import com.yuyulife.assistant.ui.memo.MemoRoute
 import com.yuyulife.assistant.ui.background.BackgroundImageState
 import com.yuyulife.assistant.ui.background.rememberBackgroundImage
 
@@ -42,13 +44,15 @@ fun YuyuLifeApp(
     ledgerRepository: LedgerRepository,
     ledgerCategoryRepository: LedgerCategoryRepository,
     settingsRepository: SettingsRepository,
+    memoRepository: MemoRepository,
 ) {
     YuyuLifeTheme {
         var showCover by rememberSaveable { mutableStateOf(true) }
         var currentSection by rememberSaveable { mutableStateOf(AppSection.TODO) }
+        var selectedMemoThreadId by rememberSaveable { mutableStateOf<Long?>(null) }
         val settings by settingsRepository.settings.collectAsStateWithLifecycle()
         val backgroundRequested = settings.customBackgroundEnabled &&
-            currentSection != AppSection.SETTINGS
+            currentSection in setOf(AppSection.TODO, AppSection.LEDGER)
         val backgroundState by rememberBackgroundImage(
             enabled = backgroundRequested,
             uri = settings.customBackgroundUri,
@@ -101,14 +105,19 @@ fun YuyuLifeApp(
                 },
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
-                    NavigationBar {
-                        AppSection.entries.forEach { section ->
-                            NavigationBarItem(
-                                selected = currentSection == section,
-                                onClick = { currentSection = section },
-                                icon = { Text(section.symbol) },
-                                label = { Text(section.label) },
-                            )
+                    if (currentSection != AppSection.MEMO || selectedMemoThreadId == null) {
+                        NavigationBar {
+                            AppSection.entries.forEach { section ->
+                                NavigationBarItem(
+                                    selected = currentSection == section,
+                                    onClick = {
+                                        currentSection = section
+                                        if (section != AppSection.MEMO) selectedMemoThreadId = null
+                                    },
+                                    icon = { Text(section.symbol) },
+                                    label = { Text(section.label) },
+                                )
+                            }
                         }
                     }
                 },
@@ -122,6 +131,13 @@ fun YuyuLifeApp(
                     AppSection.LEDGER -> LedgerRoute(
                         repository = ledgerRepository,
                         categoryRepository = ledgerCategoryRepository,
+                        modifier = Modifier.padding(contentPadding),
+                    )
+
+                    AppSection.MEMO -> MemoRoute(
+                        repository = memoRepository,
+                        selectedThreadId = selectedMemoThreadId,
+                        onSelectThread = { selectedMemoThreadId = it },
                         modifier = Modifier.padding(contentPadding),
                     )
 

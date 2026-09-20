@@ -7,11 +7,14 @@ import com.yuyulife.assistant.data.local.DATABASE_CREATE_CALLBACK
 import com.yuyulife.assistant.data.local.MIGRATION_1_2
 import com.yuyulife.assistant.data.local.MIGRATION_2_3
 import com.yuyulife.assistant.data.local.MIGRATION_3_4
+import com.yuyulife.assistant.data.local.MIGRATION_4_5
+import com.yuyulife.assistant.data.repository.MemoRepository
 import com.yuyulife.assistant.data.repository.LedgerRepository
 import com.yuyulife.assistant.data.repository.LedgerCategoryRepository
 import com.yuyulife.assistant.data.repository.SettingsRepository
 import com.yuyulife.assistant.data.repository.TodoRepository
 import com.yuyulife.assistant.reminder.TodoReminderScheduler
+import com.yuyulife.assistant.data.storage.MemoAttachmentStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,7 +29,7 @@ class YuyuLifeApplication : Application() {
             "yuyu-life.db",
         )
             .addCallback(DATABASE_CREATE_CALLBACK)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 
@@ -50,9 +53,14 @@ class YuyuLifeApplication : Application() {
         LedgerCategoryRepository(database.ledgerCategoryDao())
     }
 
+    val memoRepository: MemoRepository by lazy {
+        MemoRepository(database, MemoAttachmentStore(applicationContext))
+    }
+
     override fun onCreate() {
         super.onCreate()
         rescheduleReminders()
+        applicationScope.launch { memoRepository.cleanOrphanedAttachments() }
     }
 
     fun rescheduleReminders(onComplete: () -> Unit = {}) {

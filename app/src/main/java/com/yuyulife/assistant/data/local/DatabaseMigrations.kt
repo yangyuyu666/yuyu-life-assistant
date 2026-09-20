@@ -79,6 +79,40 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "CREATE TABLE IF NOT EXISTS memo_threads (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "title TEXT NOT NULL, " +
+                "createdAt INTEGER NOT NULL, " +
+                "updatedAt INTEGER NOT NULL)",
+        )
+        database.execSQL(
+            "CREATE TABLE IF NOT EXISTS memo_messages (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "threadId INTEGER NOT NULL, " +
+                "kind TEXT NOT NULL, " +
+                "text TEXT, " +
+                "attachmentPath TEXT, " +
+                "attachmentDisplayName TEXT, " +
+                "attachmentMimeType TEXT, " +
+                "attachmentSizeBytes INTEGER, " +
+                "createdAt INTEGER NOT NULL, " +
+                "FOREIGN KEY(threadId) REFERENCES memo_threads(id) " +
+                "ON UPDATE NO ACTION ON DELETE CASCADE)",
+        )
+        database.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_memo_messages_threadId " +
+                "ON memo_messages (threadId)",
+        )
+        database.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_memo_messages_threadId_createdAt " +
+                "ON memo_messages (threadId, createdAt)",
+        )
+    }
+}
+
 private fun seedDefaultLedgerCategories(database: SupportSQLiteDatabase) {
     val defaults = listOf(
         Triple("EXPENSE", "餐饮", 0),

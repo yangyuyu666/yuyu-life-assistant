@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
                 ledgerRepository = app.ledgerRepository,
                 ledgerCategoryRepository = app.ledgerCategoryRepository,
                 settingsRepository = app.settingsRepository,
+                memoRepository = app.memoRepository,
             )
         }
     }
