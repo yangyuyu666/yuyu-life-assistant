@@ -3,6 +3,7 @@ package com.yuyulife.assistant.ui.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.NavigationBar
@@ -138,7 +139,9 @@ fun YuyuLifeApp(
                         repository = memoRepository,
                         selectedThreadId = selectedMemoThreadId,
                         onSelectThread = { selectedMemoThreadId = it },
-                        modifier = Modifier.padding(contentPadding),
+                        modifier = Modifier
+                            .padding(contentPadding)
+                            .consumeWindowInsets(contentPadding),
                     )
 
                     AppSection.SETTINGS -> SettingsRoute(

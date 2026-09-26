@@ -58,7 +58,11 @@ fun MemoChatScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding(),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -125,7 +129,6 @@ fun MemoChatScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .imePadding()
                 .padding(8.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
